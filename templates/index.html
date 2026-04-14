@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpellCompiler — Compiler-Based Spell Checker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <rect width="32" height="32" rx="8" fill="url(#grad)"/>
+                    <path d="M8 22L12 10h2l4 12h-2.2l-0.9-3h-4.8l-0.9 3H8zm3.6-5h3.8L13.5 12h-0.1L11.6 17z" fill="#fff"/>
+                    <path d="M20 10h2v10.5c0 0.8 0.4 1.2 1 1.2s1-0.4 1-1.2V10h2v10.5c0 1.8-1.2 3-3 3s-3-1.2-3-3V10z" fill="#fff" opacity="0.8"/>
+                    <defs><linearGradient id="grad" x1="0" y1="0" x2="32" y2="32">
+                        <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
+                    </linearGradient></defs>
+                </svg>
+                <h1>SpellCompiler</h1>
+            </div>
+            <p class="tagline">Compiler-Based English Spelling &amp; Grammar Analyzer</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Pipeline Visualization -->
+        <section class="pipeline">
+            <div class="pipeline-step" data-step="1" id="pipe-lexer">
+                <div class="step-icon">1</div>
+                <span>Lexical Analysis</span>
+            </div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-step" data-step="2" id="pipe-spell">
+                <div class="step-icon">2</div>
+                <span>Spelling Validation</span>
+            </div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-step" data-step="3" id="pipe-grammar">
+                <div class="step-icon">3</div>
+                <span>Grammar Checking</span>
+            </div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-step" data-step="4" id="pipe-output">
+                <div class="step-icon">4</div>
+                <span>Output</span>
+            </div>
+        </section>
+
+        <!-- Input Section -->
+        <section class="input-section card">
+            <h2>Input Text</h2>
+            <div class="input-modes">
+                <button class="tab-btn active" data-tab="text-tab">Type / Paste Text</button>
+                <button class="tab-btn" data-tab="file-tab">Upload File</button>
+            </div>
+
+            <div class="tab-content active" id="text-tab">
+                <textarea id="input-text" placeholder="Type or paste your English text here…&#10;&#10;Example: Ths is a sampel sentense with speling erors." rows="8"></textarea>
+            </div>
+
+            <div class="tab-content" id="file-tab">
+                <div class="file-upload-area" id="drop-zone">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <p>Drag &amp; drop a <strong>.txt</strong> or <strong>.md</strong> file here</p>
+                    <p class="file-hint">or click to browse</p>
+                    <input type="file" id="file-input" accept=".txt,.md,.text" hidden>
+                    <span class="file-name" id="file-name"></span>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="analyze-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="4 17 10 11 4 5"/>
+                    <line x1="12" y1="19" x2="20" y2="19"/>
+                </svg>
+                Analyze Text
+            </button>
+        </section>
+
+        <!-- Loading -->
+        <div class="loader hidden" id="loader">
+            <div class="spinner"></div>
+            <p>Running compiler pipeline…</p>
+        </div>
+
+        <!-- Results Section -->
+        <section class="results hidden" id="results">
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-words">0</div>
+                    <div class="stat-label">Words</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-sentences">0</div>
+                    <div class="stat-label">Sentences</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-tokens">0</div>
+                    <div class="stat-label">Tokens</div>
+                </div>
+                <div class="stat-card error-stat">
+                    <div class="stat-value" id="stat-misspelled">0</div>
+                    <div class="stat-label">Misspelled</div>
+                </div>
+                <div class="stat-card warn-stat">
+                    <div class="stat-value" id="stat-grammar">0</div>
+                    <div class="stat-label">Grammar Issues</div>
+                </div>
+            </div>
+
+            <!-- Corrected Text -->
+            <div class="card result-card">
+                <h3>✅ Corrected Text</h3>
+                <div class="corrected-text" id="corrected-text"></div>
+            </div>
+
+            <!-- Token Stream -->
+            <div class="card result-card">
+                <h3>🔤 Token Stream <span class="badge" id="token-badge">Phase 1</span></h3>
+                <div class="token-stream" id="token-stream"></div>
+            </div>
+
+            <!-- Spelling Errors -->
+            <div class="card result-card">
+                <h3>📝 Spelling Errors <span class="badge badge-error" id="spell-badge">0</span></h3>
+                <div id="spelling-errors"></div>
+            </div>
+
+            <!-- Grammar Issues -->
+            <div class="card result-card">
+                <h3>📐 Grammar Issues <span class="badge badge-warn" id="grammar-badge">0</span></h3>
+                <div id="grammar-issues"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>SpellCompiler &mdash; A compiler-based approach to English spelling &amp; grammar analysis</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
