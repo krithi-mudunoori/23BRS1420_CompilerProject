@@ -110,7 +110,7 @@ cd 23BRS1420_CompilerProject
 
 ---
 
-### 2Install dependencies
+### Install dependencies
 
 ```
 pip install -r requirements.txt
