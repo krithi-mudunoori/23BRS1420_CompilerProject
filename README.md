@@ -105,7 +105,7 @@ this is a sampel sentense with speling erors. the the quick brown fox jumpd over
 
 ```
 git clone https://github.com/krithi-mudunoori/23BRS1420_CompilerProject.git
-cd YOUR_REPO_NAME
+cd 23BRS1420_CompilerProject
 ```
 
 ---
